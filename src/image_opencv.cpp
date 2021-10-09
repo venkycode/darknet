@@ -903,13 +903,15 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
         if (!show_img) return;
         static int frame_id = 0;
         frame_id++;
-
+        
         for (i = 0; i < num; ++i) {
             char labelstr[4096] = { 0 };
             int class_id = -1;
+            int motorbike_detected = 0;
             for (j = 0; j < classes; ++j) {
                 int show = strncmp(names[j], "dont_show", 9);
                 if (dets[i].prob[j] > thresh && show) {
+                    motorbike_detected |= (strcmp(names[j],"motorbike")==0);
                     if (class_id < 0) {
                         strcat(labelstr, names[j]);
                         class_id = j;
@@ -1014,9 +1016,16 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 //cvResetImageROI(copy_img);
 
                 cv::rectangle(*show_img, pt1, pt2, color, width, 8, 0);
-                if (ext_output)
-                    printf("\t(left_x: %4.0f   top_y: %4.0f   width: %4.0f   height: %4.0f)\n",
+                if (ext_output){
+                    if(motorbike_detected){
+                      std::ofstream outfile;
+                      outfile.open("coord.txt", std::ios::app );
+                      outfile <<left<<" "<<top<<" "<<b.w*show_img->cols<<" "<<b.h*show_img->rows<<endl;
+                      outfile.close();
+                    }
+                    printf("\t [new impl] (left_x: %4.0f   top_y: %4.0f   width: %4.0f   height: %4.0f)\n",
                     (float)left, (float)top, b.w*show_img->cols, b.h*show_img->rows);
+                }
                 else
                     printf("\n");
 
